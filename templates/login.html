@@ -1,0 +1,93 @@
+{% extends "base.html" %}
+
+{% block title %}Sign In | Student Opportunity Discovery Platform{% endblock %}
+
+{% block content %}
+<div class="container">
+  <div class="auth-wrapper">
+    <div class="auth-card">
+      <div class="auth-header">
+        <div class="brand-icon" style="margin: 0 auto 1rem; width: 48px; height: 48px; font-size: 1.5rem;">🎓</div>
+        <h1 class="auth-title">
+          {% if is_admin_prompt %}Administrator Login{% else %}Welcome Back{% endif %}
+        </h1>
+        <p class="auth-subtitle">
+          {% if is_admin_prompt %}
+            Access administrator dashboard and opportunity management
+          {% else %}
+            Sign in to discover opportunities matching your profile
+          {% endif %}
+        </p>
+      </div>
+
+      <form action="{{ url_for('admin_login' if is_admin_prompt else 'login') }}" method="POST">
+        {% if request.args.get('next') %}
+          <input type="hidden" name="next" value="{{ request.args.get('next') }}">
+        {% endif %}
+
+        <div class="form-group">
+          <label class="form-label" for="email">Email Address</label>
+          <input
+            type="email"
+            id="email"
+            name="email"
+            class="form-control"
+            placeholder="e.g. student@college.edu"
+            value="{{ email or '' }}"
+            required
+            autocomplete="email"
+          >
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="password">Password</label>
+          <input
+            type="password"
+            id="password"
+            name="password"
+            class="form-control"
+            placeholder="••••••••"
+            required
+            autocomplete="current-password"
+          >
+        </div>
+
+        <button type="submit" class="btn btn-primary" style="width: 100%; margin-top: 0.5rem;">
+          {% if is_admin_prompt %}Sign In as Administrator{% else %}Sign In to OpporSphere{% endif %}
+        </button>
+      </form>
+
+      <!-- Instant Demo Login Box for Hackathon Reviewers -->
+      <div class="demo-account-box">
+        <strong style="display: block; margin-bottom: 0.35rem; color: var(--text-main);">
+          ⚡ Quick Demo Credentials (1-Click Fill)
+        </strong>
+        <p style="color: var(--text-muted); font-size: 0.8rem; margin-bottom: 0.6rem;">
+          Click below to automatically fill pre-configured sample credentials:
+        </p>
+        <div class="demo-btns">
+          <button type="button" class="btn btn-secondary btn-sm" id="fillStudentDemo" style="flex: 1;">
+            🎓 Demo Student
+          </button>
+          <button type="button" class="btn btn-secondary btn-sm" id="fillAdminDemo" style="flex: 1;">
+            ⚡ Platform Admin
+          </button>
+        </div>
+      </div>
+
+      <div style="text-align: center; margin-top: 1.5rem; font-size: 0.9rem; color: var(--text-muted);">
+        {% if is_admin_prompt %}
+          <a href="{{ url_for('login') }}">Switch to Student Login &rarr;</a>
+        {% else %}
+          Don't have an account yet?
+          <a href="{{ url_for('register') }}" style="font-weight: 700;">Create Student Account</a>
+          <br>
+          <span style="font-size: 0.82rem; margin-top: 0.5rem; display: inline-block;">
+            Are you an administrator? <a href="{{ url_for('admin_login') }}">Admin Login</a>
+          </span>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,133 @@
+{% extends "base.html" %}
+
+{% block title %}Application Tracker | OpporSphere{% endblock %}
+
+{% block content %}
+<div class="container" style="padding-top: 2rem;">
+
+  <!-- Page Header -->
+  <div style="display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 2rem; flex-wrap: wrap; gap: 1rem;">
+    <div>
+      <span class="badge badge-primary" style="margin-bottom: 0.5rem;">Lifecycle Management</span>
+      <h1 style="font-size: 2.25rem; font-weight: 800; letter-spacing: -0.02em;">
+        Application Pipeline Tracker
+      </h1>
+      <p style="color: var(--text-muted); font-size: 1rem;">
+        Track and manage all your submissions across internships, hackathons, and research programs.
+      </p>
+    </div>
+    <a href="{{ url_for('opportunities') }}" class="btn btn-primary btn-sm">
+      + Discover Opportunities to Apply
+    </a>
+  </div>
+
+  <!-- Stage Filter Tabs with Live Counts -->
+  <div class="category-filter-pills" style="margin-bottom: 2rem;">
+    <a href="{{ url_for('applications', status='All') }}"
+       class="filter-pill {% if status_filter == 'All' %}active{% endif %}">
+      All Applications ({{ status_counts.Total or 0 }})
+    </a>
+    <a href="{{ url_for('applications', status='Interested') }}"
+       class="filter-pill {% if status_filter == 'Interested' %}active{% endif %}">
+      ⭐ Interested ({{ status_counts.Interested or 0 }})
+    </a>
+    <a href="{{ url_for('applications', status='Applied') }}"
+       class="filter-pill {% if status_filter == 'Applied' %}active{% endif %}">
+      📝 Applied ({{ status_counts.Applied or 0 }})
+    </a>
+    <a href="{{ url_for('applications', status='Shortlisted') }}"
+       class="filter-pill {% if status_filter == 'Shortlisted' %}active{% endif %}">
+      🎯 Shortlisted ({{ status_counts.Shortlisted or 0 }})
+    </a>
+    <a href="{{ url_for('applications', status='Selected') }}"
+       class="filter-pill {% if status_filter == 'Selected' %}active{% endif %}">
+      🎉 Selected ({{ status_counts.Selected or 0 }})
+    </a>
+    <a href="{{ url_for('applications', status='Rejected') }}"
+       class="filter-pill {% if status_filter == 'Rejected' %}active{% endif %}">
+      ❌ Rejected ({{ status_counts.Rejected or 0 }})
+    </a>
+  </div>
+
+  <!-- Applications List / Table -->
+  {% if applications %}
+    <div style="display: flex; flex-direction: column; gap: 1.25rem;">
+      {% for app in applications %}
+        <div class="card card-hoverable" style="padding: 1.5rem; border-left: 5px solid {% if app.status == 'Selected' %}#10b981{% elif app.status == 'Shortlisted' %}#8b5cf6{% elif app.status == 'Applied' %}#0ea5e9{% elif app.status == 'Rejected' %}#ef4444{% else %}#4f46e5{% endif %};">
+          <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 1rem; flex-wrap: wrap;">
+            <div>
+              <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.35rem;">
+                <span class="badge badge-type-{{ app.type.lower() }}">{{ app.type }}</span>
+                <span class="badge {{ app.deadline_info.badge_class }}">{{ app.deadline_info.label }}</span>
+                <span style="font-size: 0.8rem; color: var(--text-muted);">Added {{ app.applied_date[:10] }}</span>
+              </div>
+
+              <h3 style="font-size: 1.25rem; font-weight: 800; margin-bottom: 0.25rem;">
+                <a href="{{ url_for('opportunity_details', opp_id=app.opp_id) }}" style="color: inherit;">
+                  {{ app.title }}
+                </a>
+              </h3>
+
+              <div style="font-size: 0.9rem; font-weight: 600; color: var(--text-muted); margin-bottom: 0.5rem;">
+                {{ app.organization }} &middot; 📍 {{ app.location }} ({{ app.mode }})
+              </div>
+            </div>
+
+            <!-- Current Stage Badge & Quick Update Trigger -->
+            <div style="display: flex; flex-direction: column; align-items: flex-end; gap: 0.5rem;">
+              <span class="badge {% if app.status == 'Selected' %}badge-success{% elif app.status == 'Shortlisted' %}badge-primary{% elif app.status == 'Rejected' %}badge-danger{% else %}badge-neutral{% endif %}" style="font-size: 0.9rem; padding: 0.35rem 0.85rem;">
+                {{ app.status }}
+              </span>
+
+              <button
+                type="button"
+                class="btn btn-secondary btn-sm btn-track-application"
+                data-id="{{ app.opp_id }}"
+                data-title="{{ app.title }}"
+                data-status="{{ app.status }}"
+              >
+                ✏️ Update Stage
+              </button>
+            </div>
+          </div>
+
+          <!-- Notes Section if Present -->
+          {% if app.notes %}
+            <div style="background: var(--bg-subtle); padding: 0.75rem 1rem; border-radius: var(--radius-md); font-size: 0.88rem; color: var(--text-muted); margin: 0.75rem 0;">
+              <strong style="color: var(--text-main);">My Notes:</strong> {{ app.notes }}
+            </div>
+          {% endif %}
+
+          <!-- Footer Actions -->
+          <div style="display: flex; justify-content: space-between; align-items: center; border-top: 1px solid var(--border-subtle); padding-top: 0.85rem; margin-top: 0.5rem; font-size: 0.85rem;">
+            <div>
+              <span style="color: var(--text-muted);">Deadline:</span> <strong>{{ app.deadline }}</strong>
+            </div>
+
+            <div style="display: flex; gap: 0.5rem;">
+              <a href="{{ url_for('opportunity_details', opp_id=app.opp_id) }}" class="btn btn-secondary btn-sm">
+                View Details
+              </a>
+              <a href="{{ app.application_url }}" target="_blank" rel="noopener noreferrer" class="btn btn-primary btn-sm">
+                Portal Link ↗
+              </a>
+            </div>
+          </div>
+        </div>
+      {% endfor %}
+    </div>
+  {% else %}
+    <div class="card" style="text-align: center; padding: 4rem 2rem;">
+      <div style="font-size: 3.5rem; margin-bottom: 1rem;">📋</div>
+      <h3 style="font-size: 1.35rem; font-weight: 700; margin-bottom: 0.5rem;">No applications in this stage</h3>
+      <p style="color: var(--text-muted); max-width: 480px; margin: 0 auto 1.5rem;">
+        When you discover internships or hackathons on OpporSphere, mark them as Interested, Applied, or Shortlisted to track them here.
+      </p>
+      <a href="{{ url_for('opportunities') }}" class="btn btn-primary">
+        Browse Opportunities
+      </a>
+    </div>
+  {% endif %}
+
+</div>
+{% endblock %}

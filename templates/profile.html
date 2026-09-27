@@ -1,0 +1,193 @@
+{% extends "base.html" %}
+
+{% block title %}My Student Profile | OpporSphere{% endblock %}
+
+{% block content %}
+<div class="container" style="padding-top: 2rem;">
+  <!-- Profile Header Card -->
+  <div class="card" style="margin-bottom: 2rem; background: linear-gradient(135deg, #ffffff, #f8fafc); border-left: 5px solid var(--primary);">
+    <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 1.5rem;">
+      <div style="display: flex; align-items: center; gap: 1.25rem;">
+        <div style="width: 64px; height: 64px; border-radius: 50%; background: linear-gradient(135deg, var(--primary), var(--accent-purple)); color: white; display: flex; align-items: center; justify-content: center; font-size: 1.8rem; font-weight: 800; box-shadow: 0 4px 12px var(--primary-glow);">
+          {{ user.name[0].upper() }}
+        </div>
+        <div>
+          <h1 style="font-size: 1.6rem; font-weight: 800; color: var(--text-main); margin-bottom: 0.25rem;">
+            {{ user.name }}
+          </h1>
+          <p style="color: var(--text-muted); font-size: 0.95rem;">
+            {{ user.degree or 'Degree' }} in {{ user.branch or 'Branch' }} &middot; {{ user.college or 'College' }}
+          </p>
+        </div>
+      </div>
+
+      <!-- Completeness Progress Bar -->
+      <div style="min-width: 220px; background: var(--bg-surface); padding: 1rem 1.25rem; border-radius: var(--radius-md); border: 1px solid var(--border-subtle);">
+        <div style="display: flex; justify-content: space-between; font-size: 0.85rem; font-weight: 700; margin-bottom: 0.4rem;">
+          <span>Profile Strength</span>
+          <span style="color: var(--primary);">{{ completeness_pct }}%</span>
+        </div>
+        <div style="width: 100%; height: 8px; background: var(--bg-subtle); border-radius: var(--radius-full); overflow: hidden;">
+          <div style="width: {{ completeness_pct }}%; height: 100%; background: linear-gradient(90deg, var(--primary), var(--secondary)); border-radius: var(--radius-full); transition: width 0.5s ease;"></div>
+        </div>
+        <span style="font-size: 0.75rem; color: var(--text-muted); display: block; margin-top: 0.35rem;">
+          Higher completeness yields better match scores.
+        </span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Profile Edit Form -->
+  <form action="{{ url_for('profile') }}" method="POST">
+    <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 2rem;">
+      <!-- Left Column: Skills & Interests & Academic -->
+      <div>
+        <div class="card" style="margin-bottom: 2rem;">
+          <h2 style="font-size: 1.25rem; font-weight: 800; margin-bottom: 0.5rem; display: flex; align-items: center; gap: 0.5rem;">
+            <span>⚡</span> Skills & Recommendation Match Criteria
+          </h2>
+          <p style="font-size: 0.9rem; color: var(--text-muted); margin-bottom: 1.5rem;">
+            The recommendation algorithm compares these technical skills against required opportunity qualifications.
+          </p>
+
+          <!-- Skill quick select chips -->
+          <div style="margin-bottom: 1rem;">
+            <label class="form-label">Tap to Quick-Add Popular Skills:</label>
+            <div style="display: flex; flex-wrap: wrap; gap: 0.4rem;">
+              {% set popular_skills = ['Python', 'C++', 'Java', 'HTML', 'CSS', 'JavaScript', 'SQL', 'AI', 'Machine Learning', 'React', 'Node.js', 'Cloud', 'Git', 'Data Analysis', 'Docker'] %}
+              {% set user_skills_list = user.skills|split_skills %}
+              {% for skill in popular_skills %}
+                <button
+                  type="button"
+                  class="filter-pill skill-chip-select {% if skill in user_skills_list %}active{% endif %}"
+                  data-skill="{{ skill }}"
+                  style="padding: 0.25rem 0.65rem; font-size: 0.8rem;"
+                >
+                  {{ '✓ ' if skill in user_skills_list else '+ ' }}{{ skill }}
+                </button>
+              {% endfor %}
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="skillsInput">Current Technical Skills (Comma-separated)</label>
+            <textarea
+              id="skillsInput"
+              name="skills"
+              class="form-control"
+              rows="3"
+              placeholder="e.g. Python, SQL, HTML, CSS, JavaScript, Machine Learning"
+            >{{ user.skills or '' }}</textarea>
+            <div class="form-text">Example: Python, C++, Java, HTML, CSS, JavaScript, SQL, AI, Machine Learning</div>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="interests">Areas of Interest / Passions</label>
+            <input
+              type="text"
+              id="interests"
+              name="interests"
+              class="form-control"
+              placeholder="e.g. AI Research, Web Development, Competitive Programming, Space Tech"
+              value="{{ user.interests or '' }}"
+            >
+          </div>
+        </div>
+
+        <!-- Academic Info Card -->
+        <div class="card">
+          <h2 style="font-size: 1.25rem; font-weight: 800; margin-bottom: 1.5rem; display: flex; align-items: center; gap: 0.5rem;">
+            <span>🏛️</span> Academic & Location Details
+          </h2>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label" for="name">Full Name</label>
+              <input type="text" id="name" name="name" class="form-control" value="{{ user.name }}" required>
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="email">Email Address</label>
+              <input type="email" id="email" class="form-control" value="{{ user.email }}" disabled style="background-color: var(--bg-subtle);">
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label" for="college">College / University</label>
+              <input type="text" id="college" name="college" class="form-control" value="{{ user.college or '' }}">
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="degree">Degree</label>
+              <input type="text" id="degree" name="degree" class="form-control" value="{{ user.degree or '' }}">
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label" for="branch">Major / Branch</label>
+              <input type="text" id="branch" name="branch" class="form-control" value="{{ user.branch or '' }}">
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="year">Year of Study</label>
+              <input type="text" id="year" name="year" class="form-control" value="{{ user.year or '' }}">
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="location">Current Location</label>
+            <input type="text" id="location" name="location" class="form-control" value="{{ user.location or '' }}">
+          </div>
+        </div>
+      </div>
+
+      <!-- Right Column: Preferences Card -->
+      <div>
+        <div class="card" style="position: sticky; top: 96px;">
+          <h2 style="font-size: 1.25rem; font-weight: 800; margin-bottom: 1.25rem; display: flex; align-items: center; gap: 0.5rem;">
+            <span>🎯</span> Match Preferences
+          </h2>
+
+          <div class="form-group">
+            <label class="form-label" for="preferred_type">Preferred Opportunity Type</label>
+            <select class="form-select" id="preferred_type" name="preferred_type">
+              <option value="All" {% if user.preferred_type == 'All' %}selected{% endif %}>All Types (Balanced)</option>
+              <option value="Internship" {% if user.preferred_type == 'Internship' %}selected{% endif %}>Internships</option>
+              <option value="Hackathon" {% if user.preferred_type == 'Hackathon' %}selected{% endif %}>Hackathons</option>
+              <option value="Scholarship" {% if user.preferred_type == 'Scholarship' %}selected{% endif %}>Scholarships</option>
+              <option value="Course" {% if user.preferred_type == 'Course' %}selected{% endif %}>Certified Courses</option>
+              <option value="Job" {% if user.preferred_type == 'Job' %}selected{% endif %}>Full-Time Jobs</option>
+              <option value="Competition" {% if user.preferred_type == 'Competition' %}selected{% endif %}>Competitions</option>
+              <option value="Research" {% if user.preferred_type == 'Research' %}selected{% endif %}>Research Fellowships</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="preferred_location">Preferred Location / Mode</label>
+            <input
+              type="text"
+              id="preferred_location"
+              name="preferred_location"
+              class="form-control"
+              placeholder="e.g. Remote, Bangalore, Hybrid"
+              value="{{ user.preferred_location or '' }}"
+            >
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="experience_level">Current Experience Level</label>
+            <select class="form-select" id="experience_level" name="experience_level">
+              <option value="Beginner" {% if user.experience_level == 'Beginner' %}selected{% endif %}>Beginner (Learning fundamentals)</option>
+              <option value="Intermediate" {% if user.experience_level == 'Intermediate' %}selected{% endif %}>Intermediate (Built side projects)</option>
+              <option value="Advanced" {% if user.experience_level == 'Advanced' %}selected{% endif %}>Advanced (Previous internships / OSS contributor)</option>
+            </select>
+          </div>
+
+          <button type="submit" class="btn btn-primary" style="width: 100%; margin-top: 1rem;">
+            💾 Save Profile & Recalculate Matches
+          </button>
+        </div>
+      </div>
+    </div>
+  </form>
+</div>
+{% endblock %}

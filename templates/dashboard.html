@@ -1,0 +1,316 @@
+{% extends "base.html" %}
+
+{% block title %}Student Dashboard | OpporSphere{% endblock %}
+
+{% block extra_head %}
+<!-- Chart.js CDN for interactive visual metrics -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+{% endblock %}
+
+{% block content %}
+<div class="container" style="padding-top: 2rem;">
+
+  <!-- Welcome Greeting -->
+  <div class="dashboard-header" style="display: flex; justify-content: space-between; align-items: flex-end; flex-wrap: wrap; gap: 1rem;">
+    <div>
+      <span class="badge badge-primary" style="margin-bottom: 0.5rem;">Student Command Center</span>
+      <h1 style="font-size: 2.25rem; font-weight: 800; letter-spacing: -0.02em;">
+        Welcome, {{ current_user.name.split()[0] }}! 👋
+      </h1>
+      <p style="color: var(--text-muted); font-size: 1rem;">
+        Here are your tailored recommendations, tracked applications, and closing deadlines.
+      </p>
+    </div>
+    <div style="display: flex; gap: 0.75rem;">
+      <a href="{{ url_for('profile') }}" class="btn btn-secondary btn-sm">
+        ⚙️ Edit My Skills
+      </a>
+      <a href="{{ url_for('opportunities') }}" class="btn btn-primary btn-sm">
+        🔍 Explore All
+      </a>
+    </div>
+  </div>
+
+  <!-- Key Metrics Row -->
+  <div class="dashboard-grid">
+    <div class="dash-stat-card">
+      <div class="dash-stat-icon icon-blue">🎯</div>
+      <div>
+        <div class="dash-stat-num">{{ total_opps }}</div>
+        <div class="dash-stat-label">Total Opportunities</div>
+      </div>
+    </div>
+
+    <div class="dash-stat-card">
+      <div class="dash-stat-icon icon-green">⚡</div>
+      <div>
+        <div class="dash-stat-num">{{ recommended_count }}</div>
+        <div class="dash-stat-label">High Skill Matches (70%+)</div>
+      </div>
+    </div>
+
+    <div class="dash-stat-card">
+      <div class="dash-stat-icon icon-purple">♥</div>
+      <div>
+        <div class="dash-stat-num">{{ saved_count }}</div>
+        <div class="dash-stat-label">Saved Opportunities</div>
+      </div>
+    </div>
+
+    <div class="dash-stat-card">
+      <div class="dash-stat-icon icon-amber">📝</div>
+      <div>
+        <div class="dash-stat-num">{{ applied_count }}</div>
+        <div class="dash-stat-label">Tracked Applications</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Dashboard Main Split: Top Recommendations & Deadlines / Pipeline -->
+  <div class="dashboard-sections-split">
+
+    <!-- Left: Top Skill-Matched Recommendations -->
+    <div>
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.25rem;">
+        <h2 style="font-size: 1.35rem; font-weight: 800; display: flex; align-items: center; gap: 0.5rem;">
+          <span>⭐</span> Handpicked Recommendations for You
+        </h2>
+        <a href="{{ url_for('opportunities', sort='match') }}" style="font-size: 0.9rem; font-weight: 700;">
+          View All Ranked &rarr;
+        </a>
+      </div>
+
+      <div style="display: flex; flex-direction: column; gap: 1.25rem;">
+        {% for opp in top_recommended %}
+          <div class="card card-hoverable" style="padding: 1.25rem;">
+            <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 1rem; margin-bottom: 0.75rem;">
+              <div>
+                <span class="badge badge-type-{{ opp.type.lower() }}" style="font-size: 0.75rem; margin-bottom: 0.35rem;">
+                  {{ opp.type }}
+                </span>
+                <h3 style="font-size: 1.15rem; font-weight: 700; margin-bottom: 0.25rem;">
+                  <a href="{{ url_for('opportunity_details', opp_id=opp.id) }}" style="color: inherit;">
+                    {{ opp.title }}
+                  </a>
+                </h3>
+                <span style="font-size: 0.85rem; font-weight: 600; color: var(--text-muted);">
+                  {{ opp.organization }} &middot; 📍 {{ opp.location }} ({{ opp.mode }})
+                </span>
+              </div>
+
+              <div class="match-score-badge {{ 'match-high' if opp.match_percentage >= 75 else ('match-medium' if opp.match_percentage >= 50 else 'match-low') }}">
+                {{ opp.match_percentage }}% Match
+              </div>
+            </div>
+
+            <!-- Skills alignment -->
+            <div class="skills-pills-list" style="margin-bottom: 0.75rem;">
+              {% for s in opp.matching_skills %}
+                <span class="skill-pill skill-matched">✓ {{ s }}</span>
+              {% endfor %}
+              {% for s in opp.missing_skills %}
+                <span class="skill-pill skill-missing">+ {{ s }}</span>
+              {% endfor %}
+            </div>
+
+            <div style="display: flex; justify-content: space-between; align-items: center; border-top: 1px solid var(--border-subtle); padding-top: 0.75rem; margin-top: 0.5rem;">
+              <span class="badge {{ opp.deadline_info.badge_class }}" style="font-size: 0.75rem;">
+                {{ opp.deadline_info.label }}
+              </span>
+
+              <div style="display: flex; gap: 0.5rem;">
+                <button
+                  class="btn-save-toggle {% if opp.is_saved %}saved{% endif %}"
+                  data-id="{{ opp.id }}"
+                  style="width: 32px; height: 32px; font-size: 0.85rem;"
+                  title="Bookmark"
+                >
+                  ♥
+                </button>
+                <a href="{{ url_for('opportunity_details', opp_id=opp.id) }}" class="btn btn-secondary btn-sm">
+                  View
+                </a>
+                <a href="{{ opp.application_url }}" target="_blank" rel="noopener noreferrer" class="btn btn-primary btn-sm">
+                  Apply &rarr;
+                </a>
+              </div>
+            </div>
+          </div>
+        {% endfor %}
+      </div>
+    </div>
+
+    <!-- Right: Application Tracking Chart & Closing Deadlines -->
+    <div style="display: flex; flex-direction: column; gap: 2rem;">
+
+      <!-- Application Tracking Donut Chart -->
+      <div class="card">
+        <h3 style="font-size: 1.15rem; font-weight: 800; margin-bottom: 1rem; display: flex; align-items: center; justify-content: space-between;">
+          <span>📊 Application Pipeline</span>
+          <a href="{{ url_for('applications') }}" style="font-size: 0.85rem; font-weight: 700;">View Tracker</a>
+        </h3>
+
+        <div style="position: relative; height: 200px; display: flex; align-items: center; justify-content: center;">
+          <canvas id="applicationStatusChart"></canvas>
+        </div>
+
+        <div style="display: flex; justify-content: space-around; font-size: 0.8rem; margin-top: 1rem; border-top: 1px solid var(--border-subtle); padding-top: 0.75rem; text-align: center;">
+          <div>
+            <div style="font-weight: 800; color: #4f46e5;">{{ status_chart_data.values[0] }}</div>
+            <span style="color: var(--text-muted);">Interested</span>
+          </div>
+          <div>
+            <div style="font-weight: 800; color: #0ea5e9;">{{ status_chart_data.values[1] }}</div>
+            <span style="color: var(--text-muted);">Applied</span>
+          </div>
+          <div>
+            <div style="font-weight: 800; color: #8b5cf6;">{{ status_chart_data.values[2] }}</div>
+            <span style="color: var(--text-muted);">Shortlisted</span>
+          </div>
+          <div>
+            <div style="font-weight: 800; color: #10b981;">{{ status_chart_data.values[3] }}</div>
+            <span style="color: var(--text-muted);">Selected</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Urgent Deadlines Countdown Widget -->
+      <div class="card">
+        <h3 style="font-size: 1.15rem; font-weight: 800; margin-bottom: 1rem; display: flex; align-items: center; gap: 0.5rem;">
+          <span>⏳</span> Urgent Upcoming Deadlines
+        </h3>
+
+        {% if urgent_deadlines %}
+          <div style="display: flex; flex-direction: column; gap: 0.75rem;">
+            {% for u in urgent_deadlines %}
+              <div style="display: flex; justify-content: space-between; align-items: center; padding: 0.75rem; background: var(--bg-subtle); border-radius: var(--radius-md);">
+                <div style="max-width: 70%;">
+                  <a href="{{ url_for('opportunity_details', opp_id=u.id) }}" style="font-weight: 700; font-size: 0.9rem; color: var(--text-main); display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
+                    {{ u.title }}
+                  </a>
+                  <span style="font-size: 0.75rem; color: var(--text-muted);">{{ u.organization }}</span>
+                </div>
+                <span class="badge {{ u.deadline_info.badge_class }}" style="font-size: 0.72rem;">
+                  {{ u.deadline_info.label }}
+                </span>
+              </div>
+            {% endfor %}
+          </div>
+        {% else %}
+          <p style="font-size: 0.85rem; color: var(--text-muted); text-align: center; padding: 1.5rem 0;">
+            No immediate deadlines closing in the next 10 days.
+          </p>
+        {% endif %}
+      </div>
+
+    </div>
+  </div>
+
+  <!-- Recent Tracked Applications Table -->
+  {% if recent_apps %}
+    <div style="margin-top: 1rem;">
+      <h2 style="font-size: 1.35rem; font-weight: 800; margin-bottom: 1rem;">Recent Application Activity</h2>
+      <div class="table-responsive">
+        <table class="table">
+          <thead>
+            <tr>
+              <th>Opportunity</th>
+              <th>Organization</th>
+              <th>Type</th>
+              <th>Deadline</th>
+              <th>Stage</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for a in recent_apps %}
+              <tr>
+                <td>
+                  <a href="{{ url_for('opportunity_details', opp_id=a.opportunity_id) }}" style="font-weight: 700;">
+                    {{ a.title }}
+                  </a>
+                </td>
+                <td>{{ a.organization }}</td>
+                <td><span class="badge badge-type-{{ a.type.lower() }}">{{ a.type }}</span></td>
+                <td>
+                  <span class="badge {{ a.deadline_info.badge_class }}">{{ a.deadline }}</span>
+                </td>
+                <td>
+                  <button
+                    type="button"
+                    class="btn btn-secondary btn-sm btn-track-application"
+                    data-id="{{ a.opportunity_id }}"
+                    data-title="{{ a.title }}"
+                    data-status="{{ a.status }}"
+                  >
+                    {{ a.status }} ✎
+                  </button>
+                </td>
+                <td>
+                  <a href="{{ url_for('opportunity_details', opp_id=a.opportunity_id) }}" class="btn btn-secondary btn-sm">
+                    View
+                  </a>
+                </td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  {% endif %}
+
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+  // Render Chart.js Application Pipeline
+  document.addEventListener("DOMContentLoaded", function() {
+    const ctx = document.getElementById("applicationStatusChart");
+    if (!ctx) return;
+
+    const chartData = {{ status_chart_data|tojson }};
+    const totalEntries = chartData.values.reduce((a, b) => a + b, 0);
+
+    // If student has no applications yet, display mock placeholder distribution
+    const values = totalEntries > 0 ? chartData.values : [1, 2, 1, 0, 0];
+    const labels = chartData.labels;
+
+    new Chart(ctx, {
+      type: "doughnut",
+      data: {
+        labels: labels,
+        datasets: [{
+          data: values,
+          backgroundColor: [
+            "#4f46e5", // Interested
+            "#0ea5e9", // Applied
+            "#8b5cf6", // Shortlisted
+            "#10b981", // Selected
+            "#ef4444"  // Rejected
+          ],
+          borderWidth: 2,
+          borderColor: "#ffffff"
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        cutout: "70%",
+        plugins: {
+          legend: {
+            display: false
+          },
+          tooltip: {
+            callbacks: {
+              label: function(context) {
+                return ` ${context.label}: ${context.raw}`;
+              }
+            }
+          }
+        }
+      }
+    });
+  });
+</script>
+{% endblock %}

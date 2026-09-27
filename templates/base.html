@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{% block title %}Student Opportunity Discovery Platform{% endblock %} | OpporSphere</title>
+  <meta name="description" content="Discover internships, hackathons, scholarships, courses, competitions, jobs and research opportunities tailored to your college education, skills, and interests.">
+  
+  <!-- Modern Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  
+  <!-- Main Stylesheet -->
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+  {% block extra_head %}{% endblock %}
+</head>
+<body>
+
+  <!-- Navigation Bar -->
+  <header class="navbar">
+    <div class="container nav-container">
+      <a href="{{ url_for('index') }}" class="nav-brand">
+        <div class="brand-icon">🎓</div>
+        <span>OpporSphere</span>
+      </a>
+
+      <!-- Desktop & Mobile Navigation Links -->
+      <ul class="nav-links">
+        <li class="nav-item {% if active_endpoint == 'index' %}active{% endif %}">
+          <a href="{{ url_for('index') }}">Home</a>
+        </li>
+        <li class="nav-item {% if active_endpoint in ['opportunities', 'opportunity_details'] %}active{% endif %}">
+          <a href="{{ url_for('opportunities') }}">Discover</a>
+        </li>
+        {% if current_user %}
+          <li class="nav-item {% if active_endpoint == 'dashboard' %}active{% endif %}">
+            <a href="{{ url_for('dashboard') }}">Dashboard</a>
+          </li>
+          <li class="nav-item {% if active_endpoint == 'saved' %}active{% endif %}">
+            <a href="{{ url_for('saved') }}">Saved</a>
+          </li>
+          <li class="nav-item {% if active_endpoint == 'applications' %}active{% endif %}">
+            <a href="{{ url_for('applications') }}">Applications</a>
+          </li>
+          {% if current_user.is_admin %}
+            <li class="nav-item {% if active_endpoint == 'admin_dashboard' %}active{% endif %}">
+              <a href="{{ url_for('admin_dashboard') }}" style="color: #c026d3;">⚡ Admin</a>
+            </li>
+          {% endif %}
+        {% endif %}
+      </ul>
+
+      <!-- User Actions -->
+      <div class="nav-actions">
+        {% if current_user %}
+          <div class="nav-user-dropdown">
+            <a href="{{ url_for('profile') }}" class="user-badge-btn" title="View Profile">
+              <div class="avatar-circle">{{ current_user.name[0].upper() }}</div>
+              <span>{{ current_user.name.split()[0] }}</span>
+            </a>
+          </div>
+          <a href="{{ url_for('logout') }}" class="btn btn-secondary btn-sm" title="Sign Out">Sign Out</a>
+        {% else %}
+          <a href="{{ url_for('login') }}" class="btn btn-secondary btn-sm">Sign In</a>
+          <a href="{{ url_for('register') }}" class="btn btn-primary btn-sm">Get Started</a>
+        {% endif %}
+
+        <button class="mobile-menu-toggle" aria-label="Toggle Navigation">☰</button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Flash Alerts Notification System -->
+  <div class="container flash-container">
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}
+        {% for category, message in messages %}
+          <div class="alert alert-{{ category }}">
+            <span>{{ message }}</span>
+            <button class="alert-close" onclick="this.parentElement.remove()">&times;</button>
+          </div>
+        {% endfor %}
+      {% endif %}
+    {% endwith %}
+  </div>
+
+  <!-- Main Body Content Block -->
+  <main class="main-content">
+    {% block content %}{% endblock %}
+  </main>
+
+  <!-- Global Application Status Tracking Modal -->
+  <div class="modal-overlay" id="applicationModal">
+    <div class="modal-container">
+      <div class="modal-header">
+        <h3 id="appModalHeading" style="font-size: 1.15rem; font-weight: 700;">Update Application Status</h3>
+        <button class="alert-close modal-close">&times;</button>
+      </div>
+      <form id="applicationStatusForm">
+        <div class="modal-body">
+          <input type="hidden" id="appModalOppId" name="opportunity_id" value="">
+          <p style="font-size: 0.9rem; color: var(--text-muted); margin-bottom: 1.25rem;">
+            Tracking application for: <strong id="appModalOppTitle" style="color: var(--text-main);"></strong>
+          </p>
+
+          <div class="form-group">
+            <label class="form-label" for="appModalStatusSelect">Application Stage</label>
+            <select class="form-select" id="appModalStatusSelect" name="status" required>
+              <option value="Interested">⭐ Interested (Bookmarked)</option>
+              <option value="Applied">📝 Applied (Submitted)</option>
+              <option value="Shortlisted">🎯 Shortlisted (Interview / Next Round)</option>
+              <option value="Selected">🎉 Selected (Offer Received)</option>
+              <option value="Rejected">❌ Rejected (Closed)</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="appModalNotes">Personal Notes / Stage Details</label>
+            <textarea class="form-control" id="appModalNotes" name="notes" rows="3" placeholder="e.g. Round 1 coding test scheduled on Friday. Resume sent via portal."></textarea>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary btn-sm modal-cancel">Cancel</button>
+          <button type="submit" class="btn btn-primary btn-sm">Save Tracking State</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Footer -->
+  <footer class="footer">
+    <div class="container">
+      <div class="footer-grid">
+        <div class="footer-brand">
+          <h4>🎓 OpporSphere</h4>
+          <p>
+            Student Opportunity Discovery Platform bridging college talent with global internships, hackathons, scholarships, and research grants. Built with Python Flask & modern Web technologies.
+          </p>
+        </div>
+        <div class="footer-col">
+          <h5>Categories</h5>
+          <ul>
+            <li><a href="{{ url_for('opportunities', type='Internship') }}">Internships</a></li>
+            <li><a href="{{ url_for('opportunities', type='Hackathon') }}">Hackathons</a></li>
+            <li><a href="{{ url_for('opportunities', type='Scholarship') }}">Scholarships</a></li>
+            <li><a href="{{ url_for('opportunities', type='Course') }}">Certified Courses</a></li>
+            <li><a href="{{ url_for('opportunities', type='Research') }}">Research Fellowships</a></li>
+          </ul>
+        </div>
+        <div class="footer-col">
+          <h5>Platform</h5>
+          <ul>
+            <li><a href="{{ url_for('opportunities') }}">All Opportunities</a></li>
+            <li><a href="{{ url_for('register') }}">Student Sign Up</a></li>
+            <li><a href="{{ url_for('login') }}">Member Sign In</a></li>
+            <li><a href="{{ url_for('admin_login') }}">Admin Portal</a></li>
+          </ul>
+        </div>
+        <div class="footer-col">
+          <h5>Quick Demo Accounts</h5>
+          <ul>
+            <li><span style="color: #cbd5e1; font-size: 0.85rem;">Student: student@college.edu</span></li>
+            <li><span style="color: #cbd5e1; font-size: 0.85rem;">Pass: student123</span></li>
+            <li style="margin-top: 0.5rem;"><span style="color: #cbd5e1; font-size: 0.85rem;">Admin: admin@platform.com</span></li>
+            <li><span style="color: #cbd5e1; font-size: 0.85rem;">Pass: admin123</span></li>
+          </ul>
+        </div>
+      </div>
+      <div class="footer-bottom">
+        <p>&copy; {{ now_year }} Student Opportunity Discovery Platform. Designed for College Hackathon Demonstration.</p>
+      </div>
+    </div>
+  </footer>
+
+  <!-- Main JavaScript File -->
+  <script src="{{ url_for('static', filename='js/script.js') }}"></script>
+  {% block extra_scripts %}{% endblock %}
+</body>
+</html>

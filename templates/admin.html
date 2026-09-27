@@ -1,0 +1,402 @@
+{% extends "base.html" %}
+
+{% block title %}Admin Management Console | OpporSphere{% endblock %}
+
+{% block content %}
+<div class="container" style="padding-top: 2rem;">
+
+  <!-- Admin Header -->
+  <div
+    style="display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 2rem; flex-wrap: wrap; gap: 1rem;">
+    <div>
+      <span class="badge badge-primary" style="margin-bottom: 0.5rem; background: #fae8ff; color: #86198f;">
+        ⚡ Administrator Portal
+      </span>
+      <h1 style="font-size: 2.25rem; font-weight: 800; letter-spacing: -0.02em;">
+        Platform Management Console
+      </h1>
+      <p style="color: var(--text-muted); font-size: 1rem;">
+        Add, curate, edit, and monitor opportunities and student user engagement.
+      </p>
+    </div>
+    <button type="button" class="btn btn-primary" onclick="openAddModal()">
+      + Add New Opportunity
+    </button>
+  </div>
+
+  <!-- Admin System Statistics -->
+  <div class="dashboard-grid">
+    <div class="dash-stat-card">
+      <div class="dash-stat-icon icon-blue">💼</div>
+      <div>
+        <div class="dash-stat-num">{{ stats.total_opportunities }}</div>
+        <div class="dash-stat-label">Total Opportunities</div>
+      </div>
+    </div>
+
+    <div class="dash-stat-card">
+      <div class="dash-stat-icon icon-green">🎓</div>
+      <div>
+        <div class="dash-stat-num">{{ stats.total_students }}</div>
+        <div class="dash-stat-label">Registered Students</div>
+      </div>
+    </div>
+
+    <div class="dash-stat-card">
+      <div class="dash-stat-icon icon-purple">📝</div>
+      <div>
+        <div class="dash-stat-num">{{ stats.total_applications }}</div>
+        <div class="dash-stat-label">Student Applications</div>
+      </div>
+    </div>
+
+    <div class="dash-stat-card">
+      <div class="dash-stat-icon icon-amber">♥</div>
+      <div>
+        <div class="dash-stat-num">{{ stats.total_saved }}</div>
+        <div class="dash-stat-label">Saved Bookmarks</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Section 1: Opportunity Management -->
+  <div style="margin-bottom: 3rem;">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+      <h2 style="font-size: 1.35rem; font-weight: 800;">
+        Manage Opportunities ({{ opportunities|length }})
+      </h2>
+    </div>
+
+    <div class="table-responsive">
+      <table class="table">
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th>Title & Organization</th>
+            <th>Category</th>
+            <th>Mode / Location</th>
+            <th>Deadline</th>
+            <th>Applicants</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for opp in opportunities %}
+          <tr>
+            <td><span style="font-family: var(--font-mono); font-weight: 700;">#{{ opp.id }}</span></td>
+            <td>
+              <strong style="color: var(--text-main); display: block;">{{ opp.title }}</strong>
+              <span style="font-size: 0.8rem; color: var(--text-muted);">{{ opp.organization }}</span>
+            </td>
+            <td>
+              <span class="badge badge-type-{{ opp.type.lower() }}">{{ opp.type }}</span>
+            </td>
+            <td>
+              <span style="font-size: 0.85rem;">{{ opp.mode }} &middot; {{ opp.location }}</span>
+            </td>
+            <td>
+              <span class="badge {{ opp.deadline_info.badge_class }}">{{ opp.deadline }}</span>
+            </td>
+            <td>
+              <span style="font-weight: 700; color: var(--primary);">{{ opp.applicant_count }}</span>
+            </td>
+            <td>
+              <div style="display: flex; gap: 0.4rem;">
+                <button type="button" class="btn btn-secondary btn-sm" onclick='openEditModal({{ opp|tojson }})'
+                  title="Edit opportunity">
+                  Edit
+                </button>
+
+                <form action="{{ url_for('admin_delete_opportunity', opp_id=opp.id) }}" method="POST"
+                  onsubmit="return confirm('Are you sure you want to permanently delete opportunity #{{ opp.id }}?');"
+                  style="display: inline;">
+                  <button type="submit" class="btn btn-danger btn-sm" title="Delete opportunity">
+                    Delete
+                  </button>
+                </form>
+              </div>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Section 2: Registered Students Table -->
+  <div style="margin-bottom: 3rem;">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+      <h2 style="font-size: 1.35rem; font-weight: 800;">
+        Registered Students Directory ({{ students|length }})
+      </h2>
+    </div>
+
+    <div class="table-responsive">
+      <table class="table">
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th>Student Name & Email</th>
+            <th>College & Degree</th>
+            <th>Year & Location</th>
+            <th>Technical Skills</th>
+            <th>Joined Date</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for s in students %}
+          <tr>
+            <td><span style="font-family: var(--font-mono); font-weight: 700;">#{{ s.id }}</span></td>
+            <td>
+              <strong style="color: var(--text-main); display: block;">{{ s.name }}</strong>
+              <span style="font-size: 0.8rem; color: var(--text-muted);">{{ s.email }}</span>
+            </td>
+            <td>
+              <div style="font-size: 0.85rem; font-weight: 600;">{{ s.college or 'Not specified' }}</div>
+              <div style="font-size: 0.78rem; color: var(--text-muted);">{{ s.degree }} in {{ s.branch }}</div>
+            </td>
+            <td>
+              <div style="font-size: 0.85rem;">{{ s.year or 'N/A' }}</div>
+              <div style="font-size: 0.78rem; color: var(--text-muted);">{{ s.location or 'N/A' }}</div>
+            </td>
+            <td style="max-width: 250px;">
+              <span style="font-size: 0.8rem; font-family: var(--font-mono); color: var(--text-muted);">
+                {{ s.skills or 'No skills added yet' }}
+              </span>
+            </td>
+            <td style="font-size: 0.82rem; color: var(--text-muted);">
+              {{ s.created_at[:10] }}
+            </td>
+          </tr>
+          {% else %}
+          <tr>
+            <td colspan="6" style="text-align: center; color: var(--text-muted); padding: 2rem;">
+              No registered students found.
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+</div>
+
+<!-- Modal: Add New Opportunity -->
+<div class="modal-overlay" id="addOpportunityModal">
+  <div class="modal-container" style="max-width: 650px;">
+    <div class="modal-header">
+      <h3 style="font-size: 1.2rem; font-weight: 800;">Add New Opportunity</h3>
+      <button class="alert-close" onclick="closeAddModal()">&times;</button>
+    </div>
+    <form action="{{ url_for('admin_add_opportunity') }}" method="POST">
+      <div class="modal-body">
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label" for="addTitle">Opportunity Title *</label>
+            <input type="text" id="addTitle" name="title" class="form-control"
+              placeholder="e.g. Google Summer of Code 2026" required>
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="addOrg">Organization / Company *</label>
+            <input type="text" id="addOrg" name="organization" class="form-control" placeholder="e.g. Google" required>
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label" for="addType">Category Type *</label>
+            <select class="form-select" id="addType" name="type" required>
+              <option value="Internship">Internship</option>
+              <option value="Hackathon">Hackathon</option>
+              <option value="Scholarship">Scholarship</option>
+              <option value="Course">Course</option>
+              <option value="Job">Job</option>
+              <option value="Competition">Competition</option>
+              <option value="Research">Research</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="addMode">Work Mode *</label>
+            <select class="form-select" id="addMode" name="mode" required>
+              <option value="Online">Online / Remote</option>
+              <option value="Hybrid">Hybrid</option>
+              <option value="On-site">On-site</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label" for="addDeadline">Application Deadline *</label>
+            <input type="date" id="addDeadline" name="deadline" class="form-control" required>
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="addLocation">Location *</label>
+            <input type="text" id="addLocation" name="location" class="form-control"
+              placeholder="e.g. Global, Bangalore, Remote" required>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="addSkills">Required Technical Skills (Comma-separated) *</label>
+          <input type="text" id="addSkills" name="required_skills" class="form-control"
+            placeholder="e.g. Python, SQL, Machine Learning" required>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="addStipend">Stipend or Prize Pool</label>
+          <input type="text" id="addStipend" name="stipend_or_prize" class="form-control"
+            placeholder="e.g. $1,500/month or INR 1,00,000 Prize">
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="addUrl">Application Portal URL *</label>
+          <input type="url" id="addUrl" name="application_url" class="form-control" placeholder="https://..." required>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="addEligibility">Eligibility Criteria</label>
+          <input type="text" id="addEligibility" name="eligibility" class="form-control"
+            placeholder="e.g. Enrolled B.Tech students in 2nd or 3rd year">
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="addDesc">Description</label>
+          <textarea id="addDesc" name="description" class="form-control" rows="3"
+            placeholder="Provide full details of responsibilities and scope..."></textarea>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary btn-sm" onclick="closeAddModal()">Cancel</button>
+        <button type="submit" class="btn btn-primary btn-sm">+ Save Opportunity</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Modal: Edit Opportunity -->
+<div class="modal-overlay" id="editOpportunityModal">
+  <div class="modal-container" style="max-width: 650px;">
+    <div class="modal-header">
+      <h3 style="font-size: 1.2rem; font-weight: 800;">Edit Opportunity</h3>
+      <button class="alert-close" onclick="closeEditModal()">&times;</button>
+    </div>
+    <form id="editOpportunityForm" method="POST">
+      <div class="modal-body">
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label" for="editTitle">Opportunity Title *</label>
+            <input type="text" id="editTitle" name="title" class="form-control" required>
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="editOrg">Organization *</label>
+            <input type="text" id="editOrg" name="organization" class="form-control" required>
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label" for="editType">Category Type *</label>
+            <select class="form-select" id="editType" name="type" required>
+              <option value="Internship">Internship</option>
+              <option value="Hackathon">Hackathon</option>
+              <option value="Scholarship">Scholarship</option>
+              <option value="Course">Course</option>
+              <option value="Job">Job</option>
+              <option value="Competition">Competition</option>
+              <option value="Research">Research</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="editMode">Work Mode *</label>
+            <select class="form-select" id="editMode" name="mode" required>
+              <option value="Online">Online / Remote</option>
+              <option value="Hybrid">Hybrid</option>
+              <option value="On-site">On-site</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label" for="editDeadline">Deadline *</label>
+            <input type="date" id="editDeadline" name="deadline" class="form-control" required>
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="editLocation">Location *</label>
+            <input type="text" id="editLocation" name="location" class="form-control" required>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="editSkills">Required Skills *</label>
+          <input type="text" id="editSkills" name="required_skills" class="form-control" required>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="editStipend">Stipend or Prize</label>
+          <input type="text" id="editStipend" name="stipend_or_prize" class="form-control">
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="editUrl">Application URL *</label>
+          <input type="url" id="editUrl" name="application_url" class="form-control" required>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="editEligibility">Eligibility</label>
+          <input type="text" id="editEligibility" name="eligibility" class="form-control">
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="editDesc">Description</label>
+          <textarea id="editDesc" name="description" class="form-control" rows="3"></textarea>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary btn-sm" onclick="closeEditModal()">Cancel</button>
+        <button type="submit" class="btn btn-primary btn-sm">Update Opportunity</button>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+  function openAddModal() {
+    document.getElementById("addOpportunityModal").classList.add("active");
+  }
+
+  function closeAddModal() {
+    document.getElementById("addOpportunityModal").classList.remove("active");
+  }
+
+  function openEditModal(opp) {
+    const modal = document.getElementById("editOpportunityModal");
+    const form = document.getElementById("editOpportunityForm");
+    form.action = "/admin/opportunity/edit/" + opp.id;
+
+    document.getElementById("editTitle").value = opp.title || "";
+    document.getElementById("editOrg").value = opp.organization || "";
+    document.getElementById("editType").value = opp.type || "Internship";
+    document.getElementById("editMode").value = opp.mode || "Online";
+    document.getElementById("editDeadline").value = opp.deadline || "";
+    document.getElementById("editLocation").value = opp.location || "";
+    document.getElementById("editSkills").value = opp.required_skills || "";
+    document.getElementById("editStipend").value = opp.stipend_or_prize || "";
+    document.getElementById("editUrl").value = opp.application_url || "";
+    document.getElementById("editEligibility").value = opp.eligibility || "";
+    document.getElementById("editDesc").value = opp.description || "";
+
+    modal.classList.add("active");
+  }
+
+  function closeEditModal() {
+    document.getElementById("editOpportunityModal").classList.remove("active");
+  }
+</script>
+{% endblock %}

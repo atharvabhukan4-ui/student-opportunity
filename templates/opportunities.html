@@ -1,0 +1,254 @@
+{% extends "base.html" %}
+
+{% block title %}Discover Opportunities | OpporSphere{% endblock %}
+
+{% block content %}
+<div class="container" style="padding-top: 2rem;">
+
+  <!-- Header Banner -->
+  <div style="margin-bottom: 2rem;">
+    <h1 style="font-size: 2.25rem; font-weight: 800; letter-spacing: -0.02em; margin-bottom: 0.5rem;">
+      Discover Opportunities
+    </h1>
+    <p style="color: var(--text-muted); font-size: 1.05rem;">
+      Explore verified internships, hackathons, scholarships, and research grants with skill-based match scoring.
+    </p>
+  </div>
+
+  <!-- Search & Filter Controls Panel -->
+  <div class="filter-bar">
+    <form action="{{ url_for('opportunities') }}" method="GET" id="searchFilterForm">
+      <!-- Search Input -->
+      <div class="search-input-group">
+        <div class="search-input-wrapper">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="11" cy="11" r="8"></circle>
+            <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+          </svg>
+          <input
+            type="text"
+            name="search"
+            class="form-control"
+            placeholder="Search by role, company (Google, AWS, ISRO), skills (Python, SQL), or keywords..."
+            value="{{ current_filters.search }}"
+          >
+        </div>
+        <button type="submit" class="btn btn-primary">Search</button>
+        {% if current_filters.search or current_filters.type != 'All' or current_filters.skill or current_filters.location or current_filters.mode != 'All' %}
+          <a href="{{ url_for('opportunities') }}" class="btn btn-secondary" title="Reset all filters">Clear</a>
+        {% endif %}
+      </div>
+
+      <!-- Quick Category Filter Pills -->
+      <div class="category-filter-pills">
+        <a href="{{ url_for('opportunities', type='All', search=current_filters.search, skill=current_filters.skill, location=current_filters.location, mode=current_filters.mode, sort=current_filters.sort) }}"
+           class="filter-pill {% if current_filters.type == 'All' %}active{% endif %}">
+          All ({{ total_count }})
+        </a>
+        {% for cat in available_types %}
+          <a href="{{ url_for('opportunities', type=cat, search=current_filters.search, skill=current_filters.skill, location=current_filters.location, mode=current_filters.mode, sort=current_filters.sort) }}"
+             class="filter-pill {% if current_filters.type == cat %}active{% endif %}">
+            {{ cat }}
+          </a>
+        {% endfor %}
+      </div>
+
+      <!-- Advanced Filter Dropdowns Row -->
+      <div class="filter-controls-row">
+        <div>
+          <label class="form-label" style="font-size: 0.78rem; text-transform: uppercase;">Mode</label>
+          <select name="mode" class="form-select" onchange="this.form.submit()">
+            <option value="All" {% if current_filters.mode == 'All' %}selected{% endif %}>All Modes (Online/On-site/Hybrid)</option>
+            <option value="Online" {% if current_filters.mode == 'Online' %}selected{% endif %}>Online / Remote</option>
+            <option value="Hybrid" {% if current_filters.mode == 'Hybrid' %}selected{% endif %}>Hybrid</option>
+            <option value="On-site" {% if current_filters.mode == 'On-site' %}selected{% endif %}>On-site</option>
+          </select>
+        </div>
+
+        <div>
+          <label class="form-label" style="font-size: 0.78rem; text-transform: uppercase;">Filter by Skill</label>
+          <input
+            type="text"
+            name="skill"
+            class="form-control"
+            placeholder="e.g. Python, Machine Learning"
+            value="{{ current_filters.skill }}"
+          >
+        </div>
+
+        <div>
+          <label class="form-label" style="font-size: 0.78rem; text-transform: uppercase;">Location</label>
+          <input
+            type="text"
+            name="location"
+            class="form-control"
+            placeholder="e.g. Global, India, Remote"
+            value="{{ current_filters.location }}"
+          >
+        </div>
+
+        <div>
+          <label class="form-label" style="font-size: 0.78rem; text-transform: uppercase;">Sort By</label>
+          <select name="sort" class="form-select" onchange="this.form.submit()">
+            {% if current_user %}
+              <option value="match" {% if current_filters.sort == 'match' %}selected{% endif %}>Highest Match %</option>
+            {% endif %}
+            <option value="deadline" {% if current_filters.sort == 'deadline' %}selected{% endif %}>Deadline (Soonest First)</option>
+            <option value="newest" {% if current_filters.sort == 'newest' %}selected{% endif %}>Recently Added</option>
+            <option value="title" {% if current_filters.sort == 'title' %}selected{% endif %}>Alphabetical (A-Z)</option>
+          </select>
+        </div>
+      </div>
+    </form>
+  </div>
+
+  <!-- Opportunities Results Header -->
+  <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 1rem;">
+    <div>
+      <span style="font-size: 0.95rem; font-weight: 700; color: var(--text-main);">
+        Showing {{ opportunities|length }} opportunit{{ 'ies' if opportunities|length != 1 else 'y' }}
+      </span>
+      {% if not current_user %}
+        <span style="font-size: 0.85rem; color: var(--text-muted); margin-left: 0.5rem;">
+          (<a href="{{ url_for('login') }}">Sign in</a> to calculate personalized skill match percentages)
+        </span>
+      {% endif %}
+    </div>
+  </div>
+
+  <!-- Opportunities Grid Cards -->
+  {% if opportunities %}
+    <div class="opportunities-grid">
+      {% for opp in opportunities %}
+        <div class="opportunity-card card-hoverable">
+          <!-- Card Header -->
+          <div class="opp-card-header">
+            <div class="opp-org-info">
+              <div class="opp-org-avatar">{{ opp.organization[0] }}</div>
+              <div>
+                <div class="opp-org-name">{{ opp.organization }}</div>
+                <span class="badge badge-type-{{ opp.type.lower() }}">{{ opp.type }}</span>
+              </div>
+            </div>
+
+            <!-- Match Percentage Pill or Deadline Badge -->
+            <div style="display: flex; flex-direction: column; align-items: flex-end; gap: 0.35rem;">
+              {% if current_user and opp.match_percentage is not none %}
+                <div class="match-score-badge {{ 'match-high' if opp.match_percentage >= 75 else ('match-medium' if opp.match_percentage >= 50 else 'match-low') }}" title="{{ opp.explanation }}">
+                  <span>⚡ {{ opp.match_percentage }}% Match</span>
+                </div>
+              {% endif %}
+              <span class="badge {{ opp.deadline_info.badge_class }}">
+                {{ opp.deadline_info.label }}
+              </span>
+            </div>
+          </div>
+
+          <!-- Opportunity Title -->
+          <h3 class="opp-title">
+            <a href="{{ url_for('opportunity_details', opp_id=opp.id) }}">
+              {{ opp.title }}
+            </a>
+          </h3>
+
+          <!-- Meta Information -->
+          <div class="opp-meta-row">
+            <span style="font-size: 0.85rem; color: var(--text-muted);">📍 {{ opp.location }}</span>
+            <span style="font-size: 0.85rem; color: var(--text-muted);">💻 {{ opp.mode }}</span>
+            {% if opp.stipend_or_prize %}
+              <span style="font-size: 0.85rem; color: #059669; font-weight: 600;">💰 {{ opp.stipend_or_prize }}</span>
+            {% endif %}
+          </div>
+
+          <!-- Description snippet -->
+          <p class="opp-description">{{ opp.description }}</p>
+
+          <!-- Eligibility info -->
+          <div style="font-size: 0.82rem; color: var(--text-muted); margin-bottom: 0.85rem; background: var(--bg-subtle); padding: 0.45rem 0.75rem; border-radius: var(--radius-sm);">
+            <strong>Eligibility:</strong> {{ opp.eligibility }}
+          </div>
+
+          <!-- Skills Breakdown (Matching vs Missing) -->
+          <div class="opp-skills-section">
+            <div class="skills-heading">Required Skills Alignment</div>
+            <div class="skills-pills-list">
+              {% if current_user %}
+                {% for skill in opp.matching_skills %}
+                  <span class="skill-pill skill-matched" title="You have this skill!">✓ {{ skill }}</span>
+                {% endfor %}
+                {% for skill in opp.missing_skills %}
+                  <span class="skill-pill skill-missing" title="Missing from your profile">+ {{ skill }}</span>
+                {% endfor %}
+              {% else %}
+                {% for skill in opp.required_skills|split_skills %}
+                  <span class="skill-pill">{{ skill }}</span>
+                {% endfor %}
+              {% endif %}
+            </div>
+          </div>
+
+          <!-- Why it matched rationale -->
+          {% if current_user and opp.explanation %}
+            <div class="match-reason-box">
+              💡 {{ opp.explanation }}
+            </div>
+          {% endif %}
+
+          <!-- Card Footer & Actions -->
+          <div class="opp-footer">
+            <!-- Save Bookmark Button -->
+            <button
+              class="btn-save-toggle {% if opp.is_saved %}saved{% endif %}"
+              data-id="{{ opp.id }}"
+              title="{{ 'Remove from Saved' if opp.is_saved else 'Save Opportunity' }}"
+              aria-label="Save Opportunity"
+            >
+              ♥
+            </button>
+
+            <!-- Application Status Pill if Tracked -->
+            {% if current_user %}
+              <button
+                type="button"
+                class="btn btn-secondary btn-sm btn-track-application"
+                data-id="{{ opp.id }}"
+                data-title="{{ opp.title }}"
+                data-status="{{ opp.application_status or 'Interested' }}"
+                title="Update application status"
+              >
+                {% if opp.application_status %}
+                  <span>📋 {{ opp.application_status }}</span>
+                {% else %}
+                  <span>+ Track</span>
+                {% endif %}
+              </button>
+            {% endif %}
+
+            <div class="opp-actions">
+              <a href="{{ url_for('opportunity_details', opp_id=opp.id) }}" class="btn btn-secondary btn-sm">
+                Details
+              </a>
+              <a href="{{ opp.application_url }}" target="_blank" rel="noopener noreferrer" class="btn btn-primary btn-sm">
+                Apply &rarr;
+              </a>
+            </div>
+          </div>
+        </div>
+      {% endfor %}
+    </div>
+  {% else %}
+    <!-- Empty State -->
+    <div class="card" style="text-align: center; padding: 4rem 2rem;">
+      <div style="font-size: 3rem; margin-bottom: 1rem;">🔍</div>
+      <h3 style="font-size: 1.35rem; font-weight: 700; margin-bottom: 0.5rem;">No opportunities matched your filters</h3>
+      <p style="color: var(--text-muted); max-width: 500px; margin: 0 auto 1.5rem;">
+        Try broadening your search keywords, clearing specific category filters, or selecting "All Modes".
+      </p>
+      <a href="{{ url_for('opportunities') }}" class="btn btn-primary">
+        Reset All Filters
+      </a>
+    </div>
+  {% endif %}
+
+</div>
+{% endblock %}

@@ -1,0 +1,196 @@
+{% extends "base.html" %}
+
+{% block title %}Student Registration | OpporSphere{% endblock %}
+
+{% block content %}
+<div class="container">
+  <div class="auth-wrapper" style="max-width: 680px;">
+    <div class="auth-card">
+      <div class="auth-header">
+        <div class="brand-icon" style="margin: 0 auto 1rem; width: 48px; height: 48px; font-size: 1.5rem;">✨</div>
+        <h1 class="auth-title">Create Your Student Profile</h1>
+        <p class="auth-subtitle">
+          Join OpporSphere to get personalized skill matching and discovery for internships, hackathons, and research programs.
+        </p>
+      </div>
+
+      <form action="{{ url_for('register') }}" method="POST">
+        <!-- Basic Credentials -->
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label" for="name">Full Name *</label>
+            <input
+              type="text"
+              id="name"
+              name="name"
+              class="form-control"
+              placeholder="e.g. Alex Sharma"
+              value="{{ form_data.name if form_data else '' }}"
+              required
+            >
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="email">College / Personal Email *</label>
+            <input
+              type="email"
+              id="email"
+              name="email"
+              class="form-control"
+              placeholder="alex@college.edu"
+              value="{{ form_data.email if form_data else '' }}"
+              required
+            >
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="password">Create Password (Min 6 characters) *</label>
+          <input
+            type="password"
+            id="password"
+            name="password"
+            class="form-control"
+            placeholder="••••••••"
+            required
+            minlength="6"
+          >
+        </div>
+
+        <!-- Academic Background -->
+        <div style="margin: 1.5rem 0 0.5rem; border-top: 1px solid var(--border-subtle); padding-top: 1.25rem;">
+          <h4 style="font-size: 1rem; font-weight: 700; color: var(--text-main); margin-bottom: 0.25rem;">
+            Academic Details
+          </h4>
+          <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 1rem;">
+            Helps verify program eligibility for scholarships and internships.
+          </p>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label" for="college">College / University</label>
+            <input
+              type="text"
+              id="college"
+              name="college"
+              class="form-control"
+              placeholder="e.g. National Institute of Technology"
+              value="{{ form_data.college if form_data else '' }}"
+            >
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="degree">Degree Program</label>
+            <select class="form-select" id="degree" name="degree">
+              <option value="B.Tech" selected>B.Tech / B.E.</option>
+              <option value="B.Sc">B.Sc</option>
+              <option value="BCA">BCA</option>
+              <option value="M.Tech">M.Tech / M.E.</option>
+              <option value="MCA">MCA</option>
+              <option value="Ph.D">Ph.D / Research</option>
+              <option value="Other">Other Undergraduate / Graduate</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label" for="branch">Major / Branch</label>
+            <input
+              type="text"
+              id="branch"
+              name="branch"
+              class="form-control"
+              placeholder="e.g. Computer Science & Engg"
+              value="{{ form_data.branch if form_data else '' }}"
+            >
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="year">Current Year</label>
+            <select class="form-select" id="year" name="year">
+              <option value="1st Year">1st Year</option>
+              <option value="2nd Year">2nd Year</option>
+              <option value="3rd Year" selected>3rd Year (Pre-final)</option>
+              <option value="4th Year">4th Year (Final Year)</option>
+              <option value="Graduated">Recent Graduate</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="location">Current City / Location</label>
+          <input
+            type="text"
+            id="location"
+            name="location"
+            class="form-control"
+            placeholder="e.g. Pune, India"
+            value="{{ form_data.location if form_data else '' }}"
+          >
+        </div>
+
+        <!-- Technical Skills & Quick Select Chips -->
+        <div style="margin: 1.5rem 0 0.5rem; border-top: 1px solid var(--border-subtle); padding-top: 1.25rem;">
+          <h4 style="font-size: 1rem; font-weight: 700; color: var(--text-main); margin-bottom: 0.25rem;">
+            Technical Skills & Interests (For Smart Matching)
+          </h4>
+          <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 0.75rem;">
+            Click below to quick-add your skills, or type custom comma-separated skills.
+          </p>
+        </div>
+
+        <!-- Quick click skill chips -->
+        <div style="display: flex; flex-wrap: wrap; gap: 0.4rem; margin-bottom: 0.75rem;">
+          {% set popular_skills = ['Python', 'C++', 'Java', 'HTML', 'CSS', 'JavaScript', 'SQL', 'AI', 'Machine Learning', 'React', 'Cloud', 'Git', 'Data Structures'] %}
+          {% for skill in popular_skills %}
+            <button
+              type="button"
+              class="filter-pill skill-chip-select"
+              data-skill="{{ skill }}"
+              style="padding: 0.25rem 0.65rem; font-size: 0.78rem;"
+            >
+              + {{ skill }}
+            </button>
+          {% endfor %}
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="skillsInput">Your Technical Skills (Comma-separated)</label>
+          <input
+            type="text"
+            id="skillsInput"
+            name="skills"
+            class="form-control"
+            placeholder="e.g. Python, SQL, HTML, CSS, JavaScript, Machine Learning"
+            value="{{ form_data.skills if form_data else '' }}"
+          >
+          <div class="form-text">Used by the recommendation engine to calculate match percentage.</div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="interests">Interests & Domains</label>
+          <input
+            type="text"
+            id="interests"
+            name="interests"
+            class="form-control"
+            placeholder="e.g. AI Research, Web Development, Competitive Programming, Open Source"
+            value="{{ form_data.interests if form_data else '' }}"
+          >
+        </div>
+
+        <button type="submit" class="btn btn-primary btn-lg" style="width: 100%; margin-top: 1rem;">
+          🚀 Complete Registration & Discover Matches
+        </button>
+      </form>
+
+      <div style="text-align: center; margin-top: 1.5rem; font-size: 0.9rem; color: var(--text-muted);">
+        Already registered?
+        <a href="{{ url_for('login') }}" style="font-weight: 700;">Sign in here</a>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,126 @@
+{% extends "base.html" %}
+
+{% block title %}Saved Opportunities | OpporSphere{% endblock %}
+
+{% block content %}
+<div class="container" style="padding-top: 2rem;">
+
+  <div style="display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 2rem; flex-wrap: wrap; gap: 1rem;">
+    <div>
+      <span class="badge badge-primary" style="margin-bottom: 0.5rem;">Personal Bookmarks</span>
+      <h1 style="font-size: 2.25rem; font-weight: 800; letter-spacing: -0.02em;">
+        Saved Opportunities
+      </h1>
+      <p style="color: var(--text-muted); font-size: 1rem;">
+        Keep track of high-potential internships, hackathons, and fellowships you plan to apply for.
+      </p>
+    </div>
+    <a href="{{ url_for('opportunities') }}" class="btn btn-primary btn-sm">
+      + Browse More Opportunities
+    </a>
+  </div>
+
+  {% if opportunities %}
+    <div class="opportunities-grid">
+      {% for opp in opportunities %}
+        <div class="saved-item-container opportunity-card card-hoverable">
+          <div class="opp-card-header">
+            <div class="opp-org-info">
+              <div class="opp-org-avatar">{{ opp.organization[0] }}</div>
+              <div>
+                <div class="opp-org-name">{{ opp.organization }}</div>
+                <span class="badge badge-type-{{ opp.type.lower() }}">{{ opp.type }}</span>
+              </div>
+            </div>
+
+            <div style="display: flex; flex-direction: column; align-items: flex-end; gap: 0.35rem;">
+              {% if opp.match_percentage is not none %}
+                <div class="match-score-badge {{ 'match-high' if opp.match_percentage >= 75 else ('match-medium' if opp.match_percentage >= 50 else 'match-low') }}">
+                  {{ opp.match_percentage }}% Match
+                </div>
+              {% endif %}
+              <span class="badge {{ opp.deadline_info.badge_class }}">
+                {{ opp.deadline_info.label }}
+              </span>
+            </div>
+          </div>
+
+          <h3 class="opp-title">
+            <a href="{{ url_for('opportunity_details', opp_id=opp.id) }}">
+              {{ opp.title }}
+            </a>
+          </h3>
+
+          <div class="opp-meta-row">
+            <span style="font-size: 0.85rem; color: var(--text-muted);">📍 {{ opp.location }}</span>
+            <span style="font-size: 0.85rem; color: var(--text-muted);">💻 {{ opp.mode }}</span>
+            {% if opp.stipend_or_prize %}
+              <span style="font-size: 0.85rem; color: #059669; font-weight: 600;">💰 {{ opp.stipend_or_prize }}</span>
+            {% endif %}
+          </div>
+
+          <p class="opp-description">{{ opp.description }}</p>
+
+          <div class="opp-skills-section">
+            <div class="skills-heading">Matching Skills</div>
+            <div class="skills-pills-list">
+              {% for s in opp.matching_skills %}
+                <span class="skill-pill skill-matched">✓ {{ s }}</span>
+              {% endfor %}
+              {% for s in opp.missing_skills %}
+                <span class="skill-pill skill-missing">+ {{ s }}</span>
+              {% endfor %}
+            </div>
+          </div>
+
+          <div class="opp-footer">
+            <button
+              class="btn-save-toggle saved"
+              data-id="{{ opp.id }}"
+              title="Remove from Saved"
+              aria-label="Remove from Saved"
+            >
+              ♥
+            </button>
+
+            <button
+              type="button"
+              class="btn btn-secondary btn-sm btn-track-application"
+              data-id="{{ opp.id }}"
+              data-title="{{ opp.title }}"
+              data-status="{{ opp.application_status or 'Interested' }}"
+            >
+              {% if opp.application_status %}
+                <span>📋 {{ opp.application_status }}</span>
+              {% else %}
+                <span>+ Track</span>
+              {% endif %}
+            </button>
+
+            <div class="opp-actions">
+              <a href="{{ url_for('opportunity_details', opp_id=opp.id) }}" class="btn btn-secondary btn-sm">
+                Details
+              </a>
+              <a href="{{ opp.application_url }}" target="_blank" rel="noopener noreferrer" class="btn btn-primary btn-sm">
+                Apply &rarr;
+              </a>
+            </div>
+          </div>
+        </div>
+      {% endfor %}
+    </div>
+  {% else %}
+    <div class="card" style="text-align: center; padding: 4rem 2rem;">
+      <div style="font-size: 3.5rem; margin-bottom: 1rem;">🔖</div>
+      <h3 style="font-size: 1.35rem; font-weight: 700; margin-bottom: 0.5rem;">No saved opportunities yet</h3>
+      <p style="color: var(--text-muted); max-width: 480px; margin: 0 auto 1.5rem;">
+        Click the heart (♥) button on any opportunity to bookmark it here for fast review and application tracking.
+      </p>
+      <a href="{{ url_for('opportunities') }}" class="btn btn-primary">
+        Discover Opportunities
+      </a>
+    </div>
+  {% endif %}
+
+</div>
+{% endblock %}

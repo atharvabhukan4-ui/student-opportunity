@@ -1,0 +1,258 @@
+{% extends "base.html" %}
+
+{% block title %}Discover College Internships, Hackathons, Scholarships & Research{% endblock %}
+
+{% block content %}
+<!-- Hero Section -->
+<section class="hero-section">
+  <div class="container">
+    <div class="hero-pill">
+      <span>🚀</span>
+      <span>AI & Skill-Matched Discovery for College Students</span>
+    </div>
+
+    <h1 class="hero-title">
+      Unlock Your Next Big <br>
+      <span class="text-gradient">Career Opportunity</span> Today
+    </h1>
+
+    <p class="hero-subtitle">
+      Stop searching across dozens of job boards. Discover top-tier internships, hackathons, scholarships, courses, and research fellowships curated to match your specific skills, degree, and ambitions.
+    </p>
+
+    <div class="hero-cta">
+      <a href="{{ url_for('opportunities') }}" class="btn btn-primary btn-lg">
+        <span>🔍 Discover Opportunities</span>
+      </a>
+      {% if not current_user %}
+        <a href="{{ url_for('register') }}" class="btn btn-secondary btn-lg">
+          <span>✨ Build Student Profile</span>
+        </a>
+      {% else %}
+        <a href="{{ url_for('dashboard') }}" class="btn btn-secondary btn-lg">
+          <span>📊 Open My Dashboard</span>
+        </a>
+      {% endif %}
+    </div>
+
+    <!-- Platform Live Metrics -->
+    <div class="stats-bar">
+      <div class="stat-item">
+        <div class="stat-value">{{ stats.total_opportunities }}+</div>
+        <div class="stat-label">Active Opportunities</div>
+      </div>
+      <div class="stat-item">
+        <div class="stat-value">{{ stats.total_students }}+</div>
+        <div class="stat-label">Registered Students</div>
+      </div>
+      <div class="stat-item">
+        <div class="stat-value">{{ stats.total_applications }}+</div>
+        <div class="stat-label">Applications Tracked</div>
+      </div>
+      <div class="stat-item">
+        <div class="stat-value">{{ stats.total_categories }}</div>
+        <div class="stat-label">Curated Categories</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- How It Works Section -->
+<section class="section" style="background-color: var(--bg-surface); border-top: 1px solid var(--border-subtle); border-bottom: 1px solid var(--border-subtle);">
+  <div class="container">
+    <div class="section-header">
+      <span class="badge badge-primary" style="margin-bottom: 0.75rem;">Intelligent Matching</span>
+      <h2 class="section-title">How OpporSphere Works</h2>
+      <p class="section-desc">
+        A seamless 3-step discovery pipeline designed to save hours of manual job hunting.
+      </p>
+    </div>
+
+    <div class="steps-grid">
+      <div class="step-card">
+        <div class="step-number">1</div>
+        <h3>Define Your Profile</h3>
+        <p>
+          Input your college, degree, technical skills (Python, C++, SQL, AI, Web Dev), and field interests. Your profile becomes your matching signature.
+        </p>
+      </div>
+
+      <div class="step-card">
+        <div class="step-number">2</div>
+        <h3>Smart Recommendation Engine</h3>
+        <p>
+          Our rule-based engine cross-analyzes your skill set against real-world opportunity requirements, calculating match percentages and identifying missing skills.
+        </p>
+      </div>
+
+      <div class="step-card">
+        <div class="step-number">3</div>
+        <h3>Track & Win</h3>
+        <p>
+          Bookmark high-match roles, stay on top of closing deadlines, and track your application lifecycle from Interested to Selected in your dashboard.
+        </p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Opportunity Categories Grid -->
+<section class="section">
+  <div class="container">
+    <div class="section-header">
+      <span class="badge badge-primary" style="margin-bottom: 0.75rem;">Diverse Horizons</span>
+      <h2 class="section-title">Explore Opportunities by Category</h2>
+      <p class="section-desc">
+        Whether you want hands-on industry experience, hackathon prizes, or academic research fellowships.
+      </p>
+    </div>
+
+    <div class="categories-grid">
+      <a href="{{ url_for('opportunities', type='Internship') }}" class="category-card">
+        <div class="category-icon cat-internship">💼</div>
+        <h3>Internships</h3>
+        <p>Summer engineering, cloud architecture, and software analyst roles.</p>
+      </a>
+
+      <a href="{{ url_for('opportunities', type='Hackathon') }}" class="category-card">
+        <div class="category-icon cat-hackathon">⚡</div>
+        <h3>Hackathons</h3>
+        <p>National competitions, 48-hour sprints, and innovation bounties.</p>
+      </a>
+
+      <a href="{{ url_for('opportunities', type='Scholarship') }}" class="category-card">
+        <div class="category-icon cat-scholarship">🏅</div>
+        <h3>Scholarships</h3>
+        <p>Merit and need-based financial grants for STEM undergraduate students.</p>
+      </a>
+
+      <a href="{{ url_for('opportunities', type='Course') }}" class="category-card">
+        <div class="category-icon cat-course">📚</div>
+        <h3>Certified Courses</h3>
+        <p>Free, verified specializations from Stanford, Harvard, and DeepLearning.AI.</p>
+      </a>
+
+      <a href="{{ url_for('opportunities', type='Job') }}" class="category-card">
+        <div class="category-icon cat-job">🎯</div>
+        <h3>Full-Time Jobs</h3>
+        <p>New graduate software engineer and financial tech roles.</p>
+      </a>
+
+      <a href="{{ url_for('opportunities', type='Competition') }}" class="category-card">
+        <div class="category-icon cat-competition">🏆</div>
+        <h3>Competitions</h3>
+        <p>Global challenges from Microsoft, NASA, and Kaggle with prize pools.</p>
+      </a>
+
+      <a href="{{ url_for('opportunities', type='Research') }}" class="category-card">
+        <div class="category-icon cat-research">🔬</div>
+        <h3>Research</h3>
+        <p>Fellowships at ISRO, CERN, and MIT Media Lab with living stipends.</p>
+      </a>
+    </div>
+  </div>
+</section>
+
+<!-- Featured / Closing Soon Opportunities Preview -->
+<section class="section" style="background-color: var(--bg-surface); border-top: 1px solid var(--border-subtle);">
+  <div class="container">
+    <div style="display: flex; align-items: flex-end; justify-content: space-between; margin-bottom: 2.5rem; flex-wrap: wrap; gap: 1rem;">
+      <div>
+        <span class="badge badge-danger" style="margin-bottom: 0.5rem;">🔥 Urgent Deadlines</span>
+        <h2 class="section-title" style="margin-bottom: 0.5rem; text-align: left;">Closing Soon & Featured</h2>
+        <p style="color: var(--text-muted); font-size: 1rem;">Apply before applications close for these prestigious student programs.</p>
+      </div>
+      <a href="{{ url_for('opportunities') }}" class="btn btn-outline-primary">
+        <span>View All Opportunities &rarr;</span>
+      </a>
+    </div>
+
+    <div class="opportunities-grid">
+      {% for opp in featured_opps %}
+        <div class="opportunity-card card-hoverable">
+          <div class="opp-card-header">
+            <div class="opp-org-info">
+              <div class="opp-org-avatar">{{ opp.organization[0] }}</div>
+              <div>
+                <div class="opp-org-name">{{ opp.organization }}</div>
+                <span class="badge badge-type-{{ opp.type.lower() }}">{{ opp.type }}</span>
+              </div>
+            </div>
+
+            {% if current_user and opp.match_percentage is not none %}
+              <div class="match-score-badge {{ 'match-high' if opp.match_percentage >= 75 else ('match-medium' if opp.match_percentage >= 50 else 'match-low') }}">
+                {{ opp.match_percentage }}% Match
+              </div>
+            {% else %}
+              <span class="badge {{ opp.deadline_info.badge_class }}">
+                {{ opp.deadline_info.label }}
+              </span>
+            {% endif %}
+          </div>
+
+          <h3 class="opp-title">
+            <a href="{{ url_for('opportunity_details', opp_id=opp.id) }}" style="color: inherit;">
+              {{ opp.title }}
+            </a>
+          </h3>
+
+          <div class="opp-meta-row">
+            <span style="font-size: 0.85rem; color: var(--text-muted);">📍 {{ opp.location }}</span>
+            <span style="font-size: 0.85rem; color: var(--text-muted);">💻 {{ opp.mode }}</span>
+            {% if opp.stipend_or_prize %}
+              <span style="font-size: 0.85rem; color: #059669; font-weight: 600;">💰 {{ opp.stipend_or_prize }}</span>
+            {% endif %}
+          </div>
+
+          <p class="opp-description">{{ opp.description }}</p>
+
+          <div class="opp-skills-section">
+            <div class="skills-heading">Required Skills</div>
+            <div class="skills-pills-list">
+              {% for skill in opp.required_skills|split_skills %}
+                <span class="skill-pill">{{ skill }}</span>
+              {% endfor %}
+            </div>
+          </div>
+
+          <div class="opp-footer">
+            <div class="opp-deadline-indicator">
+              <span style="font-size: 0.8rem; color: var(--text-muted);">Deadline:</span>
+              <strong style="font-size: 0.82rem;">{{ opp.deadline }}</strong>
+            </div>
+
+            <div class="opp-actions">
+              <a href="{{ url_for('opportunity_details', opp_id=opp.id) }}" class="btn btn-secondary btn-sm">
+                Details
+              </a>
+              <a href="{{ opp.application_url }}" target="_blank" rel="noopener noreferrer" class="btn btn-primary btn-sm">
+                Apply &rarr;
+              </a>
+            </div>
+          </div>
+        </div>
+      {% endfor %}
+    </div>
+  </div>
+</section>
+
+<!-- Call to Action Banner -->
+<section class="section" style="text-align: center; background: radial-gradient(circle at 50% 50%, rgba(79, 70, 229, 0.12) 0%, var(--bg-main) 70%);">
+  <div class="container">
+    <div style="max-width: 720px; margin: 0 auto; background: var(--bg-surface); padding: 3.5rem 2.5rem; border-radius: var(--radius-xl); border: 1px solid var(--border-subtle); box-shadow: var(--shadow-xl);">
+      <h2 style="font-size: 2.25rem; font-weight: 800; margin-bottom: 1rem;">Ready to Supercharge Your Career?</h2>
+      <p style="color: var(--text-muted); font-size: 1.1rem; margin-bottom: 2rem;">
+        Join students from top engineering and science colleges discovering high-impact internships, hackathons, and research programs.
+      </p>
+      <div style="display: flex; gap: 1rem; justify-content: center; flex-wrap: wrap;">
+        <a href="{{ url_for('register') }}" class="btn btn-primary btn-lg">
+          Create Free Student Account
+        </a>
+        <a href="{{ url_for('opportunities') }}" class="btn btn-secondary btn-lg">
+          Browse All Opportunities
+        </a>
+      </div>
+    </div>
+  </div>
+</section>
+{% endblock %}
